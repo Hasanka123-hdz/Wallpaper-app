@@ -45,8 +45,8 @@ class _ImageViewState extends State<ImageView> {
                   onTap: () {
                     showDialog(
                         context: context,
-                        builder: (context) => _onTapProcess(
-                            context, widget.imgUrl));
+                        builder: (context) =>
+                            _onTapProcess(context, widget.imgUrl));
                   },
                   child: Stack(
                     children: [
@@ -120,10 +120,10 @@ class _ImageViewState extends State<ImageView> {
 
               Dio dio = Dio();
               final Directory appdirectory =
-              await getExternalStorageDirectory();
+                  await getExternalStorageDirectory();
               final Directory directory =
-              await Directory(appdirectory.path + '/wallpapers')
-                  .create(recursive: true);
+                  await Directory(appdirectory.path + '/wallpapers')
+                      .create(recursive: true);
               final String dir = directory.path;
               String localPath = '$dir/myImage.jpeg';
               try {
@@ -154,8 +154,8 @@ class _ImageViewState extends State<ImageView> {
         .checkPermissionStatus(PermissionGroup.storage);
     if (permission != PermissionStatus.granted) {
       final Map<PermissionGroup, PermissionStatus> permissions =
-      await PermissionHandler()
-          .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
+          await PermissionHandler()
+              .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
       if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
         return null;
       }
