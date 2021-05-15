@@ -2,16 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:wallpaper_app/data/data.dart';
-import 'package:wallpaper_app/modal/categories_modal.dart';
-import 'package:http/http.dart' as http;
-import 'package:wallpaper_app/modal/wallpaper_model.dart';
-import 'package:wallpaper_app/views/categorie.dart';
+import 'package:wallpaper_app/model/categories_model.dart';
+import 'package:wallpaper_app/model/wallpaper_model.dart';
 import 'package:wallpaper_app/views/image_view.dart';
 import 'package:wallpaper_app/views/search.dart';
-import 'package:wallpaper_app/widget/widget.dart';
-
-
-//////////////////////////////////
+import 'package:wallpaper_app/widgets/widget.dart';
+import 'package:http/http.dart' as http;
+import 'package:wallpaper_app/views/category.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -21,93 +18,84 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List<CategoriesModel> categories = new List();
   List<WallpaperModel> wallpapers = new List();
+
   TextEditingController searchController = new TextEditingController();
 
-//////////////////////////////// get wallpapers
-  getTrendingWallpapers() async{
-    var response = await http.get(Uri.parse('https://api.pexels.com/v1/curated?per_page=15&page=1'),
-    headers: {
-      "Authorization" : apiKey
-    });
-    //print(response.body.toString());
-    Map<String,dynamic> jsonData = jsonDecode(response.body);
-    jsonData["photos"].forEach((element){
-    //  print(element);
+  getTrendindWallpapers() async {
+    var response = await http.get(
+        Uri.parse("https://api.pexels.com/v1/curated?per_page=100&page=1"),
+        headers: {"Authorization": apiKey});
+
+    // print(response.body.toString());
+
+    Map<String, dynamic> jsonData = jsonDecode(response.body);
+
+    jsonData["photos"].forEach((element) {
+      //print(element);
       WallpaperModel wallpaperModel = new WallpaperModel();
       wallpaperModel = WallpaperModel.fromMap(element);
       wallpapers.add(wallpaperModel);
     });
 
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   @override
   void initState() {
-    getTrendingWallpapers();
+    getTrendindWallpapers();
     categories = getCategories();
-    // TODO: implement initState
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          title: Text("ICONIC"),
-          // actions: [
-          //   IconButto n(
-          //     icon: Icon(Icons.search),
-          //     splashRadius: 22,
-          //     onPressed: () {
-          //     // showSearch(
-          //     //     context: context, delegate: DataSearch()
-          //     // );
-          //   },)
-          // ],
-        ),//
-        drawer: Sidenav(),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0.0,
+        title: Text("ICONIC"),
+      ), 
+      
+      // Navigation drawer
+      drawer: Sidenav(),
 
-        body: SingleChildScrollView(
-
-          child: Container(
-            child: Column(children: [
-              SizedBox(height: 7,),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Color(0xfff5f8fd),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                margin: EdgeInsets.symmetric(horizontal: 24),
+                    color: Color(0xfff5f8fd),
+                    borderRadius: BorderRadius.circular(30)),
                 padding: EdgeInsets.symmetric(horizontal: 24),
+                margin: EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
-                  children: <Widget>[
+                  children: [
                     Expanded(
-                        child: TextField(
-                          controller: searchController,
-                          decoration: InputDecoration(
-                              hintText: "Search wallpapers",
-                              border: InputBorder.none),
-                        ),
-                    ),
-                    GestureDetector(
-                      onTap: (){
-                        Navigator.push(context, MaterialPageRoute(
-                            builder: (context) => Search(
-                              searchQuery: searchController.text,
-                            )
-                        ));
-                      },
-                      child: Container(
-                        child: Icon(Icons.search)
+                      child: TextField(
+                        controller: searchController,
+                        decoration: InputDecoration(
+                            hintText: "Search wallpapers",
+                            border: InputBorder.none),
                       ),
                     ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => Search(
+                                      searchQuery: searchController.text,
+                                    )));
+                      },
+                      child: Container(child: Icon(Icons.search)),
+                    )
                   ],
                 ),
               ),
-              SizedBox(height: 16,),
+              SizedBox(
+                height: 25,
+              ),
               Container(
                 height: 60,
                 child: ListView.builder(
@@ -115,28 +103,30 @@ class _HomeState extends State<Home> {
                     itemCount: categories.length,
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index){
-
-                  return CategoriesTile(
-                    title: categories[index].categorieName,
-                    imgUrl: categories[index].imgUrl,
-                  );
-                }),
+                    itemBuilder: (context, index) {
+                      return CategoriesTile(
+                        title: categories[index].categorieName,
+                        imgUrl: categories[index].imgUrl,
+                      );
+                    }),
               ),
-              SizedBox(height: 12,),
-              wallpapersList(wallpapers:wallpapers, context: context),
-            ],),
+              SizedBox(
+                height: 16,
+              ),
+              wallpapersList(wallpapers: wallpapers, context: context),
+            ],
           ),
         ),
+      ),
     );
   }
 }
 
-///////////////////////// Sidenav
+// Navigation drawer function
 class Sidenav extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
+
     return Drawer(
       child: ListView(
         children: [
@@ -144,115 +134,90 @@ class Sidenav extends StatelessWidget {
             padding: EdgeInsets.all(16.0),
             child: Text('ICONIC', style: TextStyle(fontSize: 21, color: Colors.red),),
           ),
-          Divider(color: Colors.grey.shade400, ),
+          Divider(color: Colors.grey.shade400,),
 
           ListTile(
-            title: Text('All Inbox'),
-            leading: Icon(Icons.move_to_inbox,  color: Colors.black,),
+            title: Text('Favorites', style: TextStyle(fontWeight: FontWeight.w500),),
+            leading: Icon(Icons.favorite,  color: Colors.black,),
+            // trailing: Text( '7' , style: TextStyle(fontWeight: FontWeight.w500),),
             onTap: (){
-
-            },
-          ),
-
-          Divider(color: Colors.grey.shade400),
-
-          ListTile(
-            title: Text('Primary'),
-            leading: Icon(Icons.inbox,  color: Colors.black,),
-            trailing: Text('44', style: TextStyle(fontWeight: FontWeight.w500),),
-            onTap: (){
-
+              Navigator.pushNamed(context, '/favorites');
             },
           ),
 
           ListTile(
-            title: Text('Social'),
-            leading: Icon(Icons.group,  color: Colors.black,),
+            title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w500),),
+            leading: Icon(Icons.settings,  color: Colors.black,),
             onTap: (){
-
             },
           ),
 
           ListTile(
-            title: Text('Promotions'),
-            leading: Icon(Icons.local_offer,  color: Colors.black,),
+            title: Text('About', style: TextStyle(fontWeight: FontWeight.w500),),
+            leading: Icon(Icons.info,  color: Colors.black,),
             onTap: (){
-
+              showAboutDialog(context: context);
             },
           ),
 
-          ListTile(
-            title: Text('Favorites'),
-            leading: Icon(Icons.star, color: Colors.black,),
-            onTap: (){
-
-            },
-          ),
-
-          ListTile(
-            title: Text('Snoozed'),
-            leading: Icon(Icons.schedule, color: Colors.black, ),
-            onTap: (){
-
-            },
-          ),
-
-          ListTile(
-            title: Text('Important'),
-            leading: Icon(Icons.local_offer,  color: Colors.black,),
-            onTap: (){
-
-            },
-          ),
-
-          ListTile(
-            title: Text('Sent'),
-            leading: Icon(Icons.local_offer,  color: Colors.black,),
-            onTap: (){
-
-            },
-          ),
-
-          ListTile(
-            title: Text('Scheduled'),
-            leading: Icon(Icons.local_offer,  color: Colors.black,),
-            onTap: (){
-
-            },
-          ),
+          // ListTile(
+          //   title: Text('Scheduled'),
+          //   leading: Icon(Icons.local_offer,  color: Colors.black,),
+          //   onTap: (){
+          //
+          //   },
+          // ),
         ],
       ),
     );
   }
 }
-////////////////////////
-
 
 class CategoriesTile extends StatelessWidget {
   final String imgUrl, title;
-  CategoriesTile({@required this.title,@required this.imgUrl});
+  CategoriesTile({@required this.title, @required this.imgUrl});
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
-        Navigator.push(context, MaterialPageRoute(
-          builder: (context) => Categorie(
-           categorieName: title.toLowerCase(),
-          )
-        ));
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Categorie(
+                      CategoryName: title.toLowerCase(),
+                    )));
       },
       child: Container(
-      margin: EdgeInsets.only(right: 4),
-      child: Stack(children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: Image.network(imgUrl, height: 50, width: 100, fit: BoxFit.cover, color: Color.fromRGBO(200, 200, 0, 0.85), colorBlendMode: BlendMode.modulate ),
+        margin: EdgeInsets.only(right: 4),
+        child: Stack(
+          children: [
+            ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imgUrl,
+                  height: 50,
+                  width: 100,
+                  fit: BoxFit.cover,
+                )),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              height: 50,
+              width: 100,
+              alignment: Alignment.center,
+              child: Text(
+                title,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15),
+              ),
+            )
+          ],
         ),
-        Container(
-          height: 50, width: 100,
-          alignment: Alignment.center,
-          child: Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15,),),),
-      ],),
       ),
     );
   }
