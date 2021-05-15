@@ -1,7 +1,5 @@
-
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +10,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_downloader/image_downloader.dart';
 import 'package:wallpaper_app/utils/db_provider.dart';
 import 'package:wallpaper_manager/wallpaper_manager.dart';
-
 
 class ImageView extends StatefulWidget {
 
@@ -158,16 +155,6 @@ class _ImageViewState extends State<ImageView> {
                                     await DatabaseHelper.instance.delete(widget.imgUrl);
                                     setState(() {
                                     });
-
-                                    Scaffold.of(context).showSnackBar(SnackBar(
-                                      content: Text('Added to favorites'),
-                                      action: SnackBarAction(
-                                        label: 'View',
-                                        onPressed: () {
-                                          Navigator.pushNamed(context, '/favorites');
-                                        },
-                                      ),
-                                    ));
                                   }
                               );
                           }
@@ -180,6 +167,17 @@ class _ImageViewState extends State<ImageView> {
                                   print('the inserted id is $i');
                                   setState(() {
                                   });
+
+                                  Scaffold.of(context).showSnackBar(SnackBar(
+                                    content: Text('Added to favorites'),
+                                    action: SnackBarAction(
+                                      label: 'View',
+                                      onPressed: () {
+                                        Navigator.pushNamed(context, '/favorites');
+                                      },
+                                    ),
+                                  ));
+                                  
                                 });
                         },
                       ),
