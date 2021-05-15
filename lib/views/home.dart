@@ -18,6 +18,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List<CategoriesModel> categories = new List();
   List<WallpaperModel> wallpapers = new List();
+  bool _loading = true;
 
   TextEditingController searchController = new TextEditingController();
 
@@ -37,7 +38,9 @@ class _HomeState extends State<Home> {
       wallpapers.add(wallpaperModel);
     });
 
-    setState(() {});
+    setState(() {
+      _loading = false;
+    });
   }
 
   @override
@@ -54,8 +57,8 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         elevation: 0.0,
         title: Text("ICONIC"),
-      ), 
-      
+      ),
+
       // Navigation drawer
       drawer: Sidenav(),
 
@@ -113,7 +116,18 @@ class _HomeState extends State<Home> {
               SizedBox(
                 height: 16,
               ),
-              wallpapersList(wallpapers: wallpapers, context: context),
+
+              // Loading
+              _loading
+                  ? Container(
+                height: MediaQuery.of(context).size.height / 1.67,
+                child: Center(child: CircularProgressIndicator()),
+              )
+                  : Container(
+                child: wallpapersList(
+                    wallpapers: wallpapers, context: context),
+              ),
+
             ],
           ),
         ),
@@ -126,36 +140,57 @@ class _HomeState extends State<Home> {
 class Sidenav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     return Drawer(
       child: ListView(
         children: [
           Padding(
             padding: EdgeInsets.all(16.0),
-            child: Text('ICONIC', style: TextStyle(fontSize: 21, color: Colors.red),),
+            child: Text(
+              'ICONIC',
+              style: TextStyle(fontSize: 21, color: Colors.red),
+            ),
           ),
-          Divider(color: Colors.grey.shade400,),
+          Divider(
+            color: Colors.grey.shade400,
+          ),
 
           ListTile(
-            title: Text('Favorites', style: TextStyle(fontWeight: FontWeight.w500),),
-            leading: Icon(Icons.favorite,  color: Colors.black,),
+            title: Text(
+              'Favorites',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            leading: Icon(
+              Icons.favorite,
+              color: Colors.black,
+            ),
             // trailing: Text( '7' , style: TextStyle(fontWeight: FontWeight.w500),),
-            onTap: (){
+            onTap: () {
               Navigator.pushNamed(context, '/favorites');
             },
           ),
 
           ListTile(
-            title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w500),),
-            leading: Icon(Icons.settings,  color: Colors.black,),
-            onTap: (){
-            },
+            title: Text(
+              'Settings',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            leading: Icon(
+              Icons.settings,
+              color: Colors.black,
+            ),
+            onTap: () {},
           ),
 
           ListTile(
-            title: Text('About', style: TextStyle(fontWeight: FontWeight.w500),),
-            leading: Icon(Icons.info,  color: Colors.black,),
-            onTap: (){
+            title: Text(
+              'About',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            leading: Icon(
+              Icons.info,
+              color: Colors.black,
+            ),
+            onTap: () {
               showAboutDialog(context: context);
             },
           ),
@@ -202,7 +237,7 @@ class CategoriesTile extends StatelessWidget {
                 )),
             Container(
               decoration: BoxDecoration(
-                color: Colors.black26,
+                color: Colors.black12,
                 borderRadius: BorderRadius.circular(8),
               ),
               height: 50,
