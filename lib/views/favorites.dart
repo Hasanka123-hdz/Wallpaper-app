@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wallpaper_app/utils/db_provider.dart';
+import 'package:wallpaper_app/views/favorite_view.dart';
 
 class FavoritesScreen extends StatefulWidget {
   @override
@@ -42,6 +43,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               }
               _fetchedFavorites = snapshot.data.map(
                 (favoriteWallpaper) => GestureDetector(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoriteView(
+                      imgUrl: favoriteWallpaper['name'],
+                    )));
+                  },
                   child: Card(
                     margin: EdgeInsets.all(16),
                     elevation: 1,
