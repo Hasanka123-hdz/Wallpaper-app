@@ -3,44 +3,46 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wallpaper_app/data/data.dart';
-import 'package:wallpaper_app/modal/wallpaper_model.dart';
-import 'package:wallpaper_app/widget/widget.dart';
+import 'package:wallpaper_app/model/wallpaper_model.dart';
+import 'package:wallpaper_app/widgets/widget.dart';
 
 class Categorie extends StatefulWidget {
-  final String categorieName;
-  Categorie({this.categorieName});
-
+  final String CategoryName;
+  Categorie({this.CategoryName});
 
   @override
   _CategorieState createState() => _CategorieState();
 }
 
 class _CategorieState extends State<Categorie> {
-
   List<WallpaperModel> wallpapers = new List();
+  bool _loading = true;
 
-  getSearchWallpapers(String query ) async{
-    var response = await http.get(Uri.parse('https://api.pexels.com/v1/search?query=$query&per_page=30&page=1'),
-        headers: {
-          "Authorization" : apiKey
-        });
-    //print(response.body.toString());
-    Map<String,dynamic> jsonData = jsonDecode(response.body);
-    jsonData["photos"].forEach((element){
-      //  print(element);
+  getSearchWallpapers(String query) async {
+    var response = await http.get(
+        Uri.parse(
+            "https://api.pexels.com/v1/search?query=$query&per_page=30&page=1"),
+        headers: {"Authorization": apiKey});
+
+    // print(response.body.toString());
+
+    Map<String, dynamic> jsonData = jsonDecode(response.body);
+
+    jsonData["photos"].forEach((element) {
+      //print(element);
       WallpaperModel wallpaperModel = new WallpaperModel();
       wallpaperModel = WallpaperModel.fromMap(element);
       wallpapers.add(wallpaperModel);
     });
 
     setState(() {
-
+      _loading = false;
     });
   }
 
   @override
   void initState() {
-    getSearchWallpapers(widget.categorieName);
+    getSearchWallpapers(widget.CategoryName);
     super.initState();
   }
 
@@ -48,17 +50,34 @@ class _CategorieState extends State<Categorie> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('ICONIC'),
         elevation: 0.0,
-        title: Text("ICONIC"),
       ),
       body: SingleChildScrollView(
-        child: Container(child: Column(
-          children: [
-            SizedBox(height: 12,),
-            wallpapersList(wallpapers:wallpapers, context: context),
-          ],
-        ),),
-      ) ,
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                    color: Color(0xfff5f8fd),
+                    borderRadius: BorderRadius.circular(30)),
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                margin: EdgeInsets.symmetric(horizontal: 24),
+              ),
+
+              _loading
+                  ? Container(
+                      height: MediaQuery.of(context).size.height / 1.2,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : Container(
+                      child: wallpapersList(
+                          wallpapers: wallpapers, context: context),
+                    ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
