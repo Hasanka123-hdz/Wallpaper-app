@@ -1,175 +1,448 @@
+
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_downloader/image_downloader.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:wallpaperplugin/wallpaperplugin.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_downloader/image_downloader.dart';
+import 'package:wallpaper_app/utils/db_provider.dart';
+import 'package:wallpaper_manager/wallpaper_manager.dart';
+
 
 class ImageView extends StatefulWidget {
+
   final String imgUrl;
   ImageView({@required this.imgUrl});
+
   @override
   _ImageViewState createState() => _ImageViewState();
 }
 
 class _ImageViewState extends State<ImageView> {
-  String _localPath;
+
+  var filePath;
+  var imageId;
+  var path=null; //use for get saved image local path
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Hero(
-            tag: widget.imgUrl,
-            child: Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.width,
-              child: Image.network(
-                widget.imgUrl,
-                fit: BoxFit.cover,
+          body: Stack(
+            children: [
+              Hero(
+                tag: widget.imgUrl,
+                child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    child: Image.network(widget.imgUrl,fit: BoxFit.cover,)),
               ),
-            ),
-          ),
-          Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) =>
-                            _onTapProcess(context, widget.imgUrl));
-                  },
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: MediaQuery.of(context).size.width / 2,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Color(0xff1C1B1B).withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                      ),
-                      Container(
-                        width: MediaQuery.of(context).size.width / 2,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white54, width: 1),
-                            borderRadius: BorderRadius.circular(30),
-                            gradient: LinearGradient(colors: [
-                              Color(0x36FFFFFF),
-                              Color(0x0FFFFFFF)
-                            ])),
-                        child: Column(
-                          children: [
-                            Text("Set Wallpaper",
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.white70)),
-                            Text(
-                              "Image will be saved in gallery",
-                              style: TextStyle(
-                                  fontSize: 10, color: Colors.white70),
-                            )
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 16,
-                ),
-                GestureDetector(
-                    onTap: () {
+
+              Container(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                alignment: Alignment.bottomCenter,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                       GestureDetector(
+                         onTap: ()  async {
+                             if(Platform.isIOS) //IOS can Only download the image
+                               {
+                                 _downloadImage();
+                                 _showSnacBarToOpenImage();
+                               }
+                             else
+                               {
+
+                                 try{
+
+                                   showDialog(context: context,
+                                       builder: (context)=>_selectWallpaperTypeDialog() );
+
+                                 }
+                                 catch(ex){
+                                   Fluttertoast.showToast(
+                                       msg: ex.message,
+                                       toastLength: Toast.LENGTH_SHORT,
+                                       gravity: ToastGravity.CENTER,
+                                       timeInSecForIosWeb: 1,
+                                       backgroundColor: Colors.red,
+                                       textColor: Colors.white,
+                                       fontSize: 16.0
+                                   );
+                                 }
+                               }
+                         },
+                         child: Stack(children: [
+                          Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Color(0xff1c1B1B).withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            width: MediaQuery.of(context).size.width/2,
+
+                          ),
+                          Container(
+                            height: 50,
+                            width: MediaQuery.of(context).size.width/2,
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white54,width: 1),
+                                borderRadius: BorderRadius.circular(30),
+                                gradient: LinearGradient(
+                                    colors: [
+                                      Color(0x36FFFFFF),
+                                      Color(0x0FFFFFFF)
+                                    ]
+                                )
+                            ),
+                            child:Column(children: [
+                              Text("Set Wallpaper",style: TextStyle(
+                                  fontSize: 16,color: Colors.white70
+                              ),),
+                              Text("Image will be saved in gallery",style: TextStyle(
+                                  fontSize: 10,color: Colors.white70
+                              ),)
+                            ],) ,
+                          ),
+                      ],),
+                       )
+                    ,
+                    SizedBox(height: 16,),
+                  GestureDetector(
+                    onTap: (){
                       Navigator.pop(context);
                     },
-                    child: Text(
-                      "Cancel",
-                      style: TextStyle(color: Colors.white),
-                    )),
-                SizedBox(
+                      child: Text("Cancel",style: TextStyle(color: Colors.white),)),
+                    SizedBox(height: 50,)
+                ],),
+              ),
+
+              //DOWNLOAD AND FAVORITE BUTTONS=================
+
+              Padding(
+                padding: const EdgeInsets.only(top: 22.0),
+                child: Container(
+                  //color: Colors.black26,
                   height: 50,
+                  width: MediaQuery.of(context).size.width,
+                  alignment: Alignment.topRight,
+                  child: Row(
+
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+
+                      IconButton(icon: Icon(Icons.download_sharp,color: Colors.white,), onPressed: () async {
+                       await _downloadImage();
+                       _showSnacBarToOpenImage();
+                      }),
+
+                      //This is BtnS for add to favorite AND SHARE.===========EDIT THE ON PRESSED ==========================================
+                      FutureBuilder(
+                        future: DatabaseHelper.instance.queryFav(widget.imgUrl),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData == true) {
+                            return
+                              IconButton(
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    await DatabaseHelper.instance.delete(widget.imgUrl);
+                                    setState(() {
+                                    });
+
+                                    Scaffold.of(context).showSnackBar(SnackBar(
+                                      content: Text('Added to favorites'),
+                                      action: SnackBarAction(
+                                        label: 'View',
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, '/favorites');
+                                        },
+                                      ),
+                                    ));
+                                  }
+                              );
+                          }
+                          else
+                            return IconButton(
+                                icon: Icon(Icons.favorite_outline_sharp),
+                                onPressed: () async {
+                                  int i = await DatabaseHelper.instance.insert(
+                                      {DatabaseHelper.columnName: widget.imgUrl});
+                                  print('the inserted id is $i');
+                                  setState(() {
+                                  });
+                                });
+                        },
+                      ),
+
+                      FlatButton(
+                        onPressed: () async {
+                          List<Map<String, dynamic>> queryRows =
+                          await DatabaseHelper.instance.queryAll();
+                          print(queryRows);
+                          // List<Map<String, dynamic>> queryRows =
+                          // await DatabaseHelper.instance.queryFav(widget.imgUrl);
+                          // print(queryRows);
+                        },
+                        child: Text('query'),
+                        color: Colors.green,
+                      ),
+
+                      IconButton(
+                          icon: Icon(Icons.share, color: Colors.white),
+                          onPressed: () {})
+                      //===========================================END OF TOP RIGHT BUTTONS===============================================
+                    ]
                 )
-              ],
-            ),
-          )
-        ],
-      ),
+                ),
+              ),
+
+              //==============================================
+
+            ],
+          ),
     );
   }
 
-  _onTapProcess(context, values) {
-    return CupertinoAlertDialog(
-      title: new Text("What would like to do?"),
-      content: Text('click Yes to set wallpaper'),
-      actions: <Widget>[
-        FlatButton(
-          child: Text('Yes'),
-          onPressed: () async {
-            if (_checkAndGetPermission() != null) {
-              //////////////////
 
-              Dio dio = Dio();
-              final Directory appdirectory =
-                  await getExternalStorageDirectory();
-              final Directory directory =
-                  await Directory(appdirectory.path + '/wallpapers')
-                      .create(recursive: true);
-              final String dir = directory.path;
-              String localPath = '$dir/myImage.jpeg';
-              try {
-                dio.download(values, localPath);
-                setState(() {
-                  _localPath = localPath;
-                });
-                Wallpaperplugin.setAutoWallpaper(localFile: _localPath);
-              } on PlatformException catch (e) {
-                print(e);
-              }
+
+  _askPermission() async {
+    if (Platform.isIOS) {
+      /*Map<PermissionGroup, PermissionStatus> permissions =
+          */await PermissionHandler()
+          .requestPermissions([PermissionGroup.photos]);
+    } else {
+      /* PermissionStatus permission = */await PermissionHandler()
+          .checkPermissionStatus(PermissionGroup.storage);
+    }
+  }
+
+  _selectWallpaperTypeDialog ()
+  {
+    return AlertDialog(
+      title: Container(child: Padding(
+        padding: const EdgeInsets.all(0.0),
+        child: Text('Set wallpaper',style: TextStyle(color: Colors.black),),
+      ),color: Colors.white,),
+      content: setupAlertDialoadContainer(context),
+    );
+  }
+
+  Widget setupAlertDialoadContainer(context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          color: Colors.white,
+          height: 155.0, // Change as per your requirement
+          width: 280.0, // Change as per your requirement
+          child: ListView(
+            children: [
+              ListTile(
+                leading: Icon(Icons.home,color: Colors.blue,),
+                title: Text("Home Screen"),
+                onTap: (){
+                  _setToHomeScreen();
+                },
+              ),
+
+              ListTile(
+                leading: Icon(Icons.lock,color: Colors.blue,),
+                title: Text("Lock Screen"),
+                onTap: (){
+                  _setToLockScreen();
+                },
+              ),
+
+              ListTile(
+                leading: Icon(Icons.phone_android,color: Colors.blue,),
+                title: Text("Both"),
+                onTap: (){
+                  _setToBothScreen();
+                },
+              ),
+            ],
+          )
+        ),
+
+
+        Align(
+          alignment: Alignment.bottomRight,
+          child: FlatButton(
+
+            onPressed: (){
               Navigator.pop(context);
-            } else {}
-          },
-        ),
-        FlatButton(
-          child: Text('No'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
+            },child: Text("Cancel"),),
+        )
       ],
     );
   }
 
-  static Future<bool> _checkAndGetPermission() async {
-    final PermissionStatus permission = await PermissionHandler()
-        .checkPermissionStatus(PermissionGroup.storage);
-    if (permission != PermissionStatus.granted) {
-      final Map<PermissionGroup, PermissionStatus> permissions =
-          await PermissionHandler()
-              .requestPermissions(<PermissionGroup>[PermissionGroup.storage]);
-      if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
-        return null;
+  _setToHomeScreen()
+  async {
+    try
+    {
+      Navigator.pop(context);
+
+      await _downloadImage();
+
+      int location = WallpaperManager.HOME_SCREEN; // or location = WallpaperManager.LOCK_SCREEN;
+      final String result = await WallpaperManager.setWallpaperFromFile(path, location);
+
+      //show toast as done
+      Fluttertoast.showToast(
+          msg: "Image sets to home screen",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+    catch(e)
+    {
+      Fluttertoast.showToast(
+          msg:e.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+
+  }
+
+  _setToLockScreen()
+  async {
+
+    try
+    {
+      Navigator.pop(context);
+
+      await _downloadImage();
+
+      int location = WallpaperManager.LOCK_SCREEN; // or location = WallpaperManager.HOME_SCREEN;
+      final String result = await WallpaperManager.setWallpaperFromFile(path, location);
+
+      //show toast as done
+      Fluttertoast.showToast(
+          msg: "Image sets to lock screen",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+    catch(e)
+    {
+      Fluttertoast.showToast(
+          msg:e.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+  }
+
+  _setToBothScreen()
+  async {
+
+    try
+    {
+      Navigator.pop(context);
+      await _downloadImage();
+
+      int location = WallpaperManager.BOTH_SCREENS; // or location = WallpaperManager.LOCK_SCREEN;
+      final String result = await WallpaperManager.setWallpaperFromFile(path, location);
+
+      //show toast as done
+      Fluttertoast.showToast(
+          msg: "Image sets to both screen",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+    catch(e)
+    {
+      Fluttertoast.showToast(
+          msg:e.message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
+  }
+
+  _downloadImage() async
+  {
+    if(path==null) {
+
+      if (Platform.isAndroid) {
+        await _askPermission();
+      }
+
+      try {
+        var imageId = await ImageDownloader.downloadImage(
+          widget.imgUrl,
+          destination: AndroidDestinationType
+              .directoryPictures, //images save to pictures folder
+        );
+        path = await ImageDownloader.findPath(imageId);
+      }
+      catch (e) {
+        Fluttertoast.showToast(
+            msg: e.message,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0
+        );
       }
     }
-    return true;
   }
 
-  _save() async {
-    // var response = await Dio()
-    //     .get(widget.imgUrl, options: Options(responseType: ResponseType.bytes));
-    // final result =
-    //     await ImageGallerySaver.saveImage(Uint8List.fromList(response.data));
-    //print(result);
-    //Navigator.pop(context);
+  _showSnacBarToOpenImage(){
+    //show SnackBar
+    final snackBar = SnackBar(
+      content: Text('Image Saved in Gallery'),
+      action: SnackBarAction(
+        label: 'Open',
+        onPressed: () async {
+          await ImageDownloader.open(path);
+        },
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    //END OF SHOW SNACK BAR
   }
+
+
 }
-
