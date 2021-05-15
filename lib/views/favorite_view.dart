@@ -397,7 +397,7 @@ class _FavoriteViewState extends State<FavoriteView> {
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    //END OF SHOW SNACK BAR
+    //END OF SHOW SNACK BAR 
   }
 
 
