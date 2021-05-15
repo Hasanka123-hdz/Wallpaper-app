@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:wallpaper_app/utils/db_provider.dart';
 import 'package:wallpaper_app/views/favorite_view.dart';
 
@@ -31,7 +32,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     children: <Widget>[
                       Icon(
                         Icons.favorite,
-                        size: 30,
+                        size: 50,
+                        color: Colors.redAccent,
                       ),
                       SizedBox(
                         height: 10,
@@ -64,7 +66,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               return _renderFavorites(forceRefresh: false);
             }
             return Center(
-              child: CircularProgressIndicator(),
+              child: SpinKitPulse(
+                color: Colors.red,
+                size: 50.0,
+              ),
             );
           },
         )
